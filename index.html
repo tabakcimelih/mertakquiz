@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klasik Mercedes — Yıl Tahmin Oyunu</title>
+<style>
+  :root {
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --border: #d1d1d6;
+    --ink: #1c1c1e;
+    --muted: #6e6e73;
+    --ok: #34c759;
+    --no: #ff3b30;
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .brand img {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+  .score { font-weight: 600; }
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  .card {
+    width: min(100%, 500px);
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .image-stage {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #e5e5ea;
+  }
+  .image-stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .model {
+    font-weight: 600;
+    text-align: center;
+    font-size: 18px;
+  }
+  .answers {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn {
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn:active { background: #e5e5ea; transform: scale(0.98); }
+  .status {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .pill {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .ok { background: #d1f7d6; color: var(--ok); }
+  .no { background: #ffd5d2; color: var(--no); }
+  .ghost { background: #f2f2f7; color: var(--muted); }
+  .end { text-align: center; }
+  .end h2 { font-size: 24px; margin-bottom: 8px; }
+  .final { font-size: 18px; margin-bottom: 16px; }
+  .again { background: var(--ok); border: none; color: #fff; }
+  .again:active { background: #2fb44a; }
+  .end-logo {
+    margin-top: 16px;
+  }
+  .end-logo img {
+    height: 100px;
+    width: auto;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="1.png" alt="Mertak Logo">
+    <span>Mertak • Klasik Mercedes</span>
+  </div>
+  <div class="score" id="scoreTop">Skor: 0</div>
+</header>
+
+<main>
+  <div class="card">
+    <div id="game">
+      <div class="image-stage"><img id="photo" alt="Soru"></div>
+      <div class="model" id="model">Model</div>
+      <div class="answers">
+        <button class="btn" id="optA">1955</button>
+        <button class="btn" id="optB">1971</button>
+      </div>
+      <div class="status">
+        <div id="qcount">1/10</div>
+        <div class="pill ghost" id="feedback">Cevabı bekliyor…</div>
+      </div>
+    </div>
+    <div id="end" class="end" style="display:none">
+      <h2>Oyun Bitti 🎉</h2>
+      <div class="final" id="final">Skor: 0/100 — Doğru: 0, Yanlış: 0</div>
+      <div class="end-logo">
+        <img src="1.png" alt="Mertak Logo">
+      </div>
+      <button class="btn again" id="again">Tekrar Oyna</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const BANK = [
+  {model:'300 SL Gullwing', year:1955, img:'01_300SL.jpg'},
+  {model:'190 SL', year:1957, img:'02_190SL.jpg'},
+  {model:'600 Grosser', year:1965, img:'03_600Grosser.jpg'},
+  {model:'280 SL Pagoda', year:1969, img:'04_280SL_Pagoda.jpg'},
+  {model:'220 SE (W111 Coupe)', year:1962, img:'05_220SE_W111_Coupe.jpg'},
+  {model:'230 SL', year:1964, img:'06_230SL.jpg'},
+  {model:'W108 280 SE', year:1969, img:'07_W108_280SE.jpg'},
+  {model:'W115', year:1973, img:'08_W115.jpg'},
+  {model:'R107 SL', year:1978, img:'09_R107_SL.jpg'},
+  {model:'W123', year:1980, img:'10_W123.jpg'},
+  {model:'450 SEL 6.9', year:1977, img:'11_450SEL_6_9.jpg'},
+  {model:'W126 S-Class', year:1985, img:'12_W126_SClass.jpg'},
+  {model:'G-Class W460', year:1983, img:'13_G_W460.jpg'},
+  {model:'500 SEC (C126)', year:1987, img:'14_500SEC_C126.jpg'},
+  {model:'190E 2.3-16 (W201)', year:1986, img:'15_190E_2_3_16.jpg'},
+  {model:'500 SL (R129)', year:1992, img:'16_500SL_R129.jpg'},
+  {model:'220 Cabriolet A', year:1939, img:'17_220_CabrioletA.jpg'},
+  {model:'170V', year:1940, img:'18_170V.jpg'},
+  {model:'Ponton (W120/W121)', year:1958, img:'19_Ponton_W120_W121.jpg'},
+  {model:'300 SEL 6.3', year:1970, img:'20_300SEL_6_3.jpg'},
+];
+const PICK_COUNT=10;
+const rand=(n)=>Math.floor(Math.random()*n);
+function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=rand(i+1);[x[i],x[j]]=[x[j],x[i]];}return x;}
+function sample2Years(correct){
+  let delta; do{delta=7+rand(6);if(Math.random()<0.5)delta=-delta;}while(correct+delta<1900||correct+delta>2025);
+  return shuffle([correct,correct+delta]);
+}
+let deck=shuffle(BANK).slice(0,PICK_COUNT);
+let i=0,score=0,right=0,wrong=0,locked=false;
+const elPhoto=document.getElementById('photo');
+const elModel=document.getElementById('model');
+const elA=document.getElementById('optA');
+const elB=document.getElementById('optB');
+const elFeedback=document.getElementById('feedback');
+const elQcount=document.getElementById('qcount');
+const elScoreTop=document.getElementById('scoreTop');
+const elEnd=document.getElementById('end');
+const elGame=document.getElementById('game');
+const elFinal=document.getElementById('final');
+const elAgain=document.getElementById('again');
+
+function loadQ(){
+  if(i>=deck.length){end();return;}
+  const q=deck[i];
+  elModel.textContent=q.model;
+  elPhoto.src=q.img;
+  const [y1,y2]=sample2Years(q.year);
+  elA.textContent=y1; elB.textContent=y2;
+  elFeedback.className='pill ghost'; elFeedback.textContent='Cevabı bekliyor…';
+  elQcount.textContent=(i+1)+'/'+deck.length;
+}
+function clickYear(sel){
+  if(locked)return;
+  const q=deck[i];
+  if(sel===q.year){score+=10;right++;elFeedback.className='pill ok';elFeedback.textContent='✔ Doğru!';}
+  else{wrong++;elFeedback.className='pill no';elFeedback.textContent='✖ Yanlış! Doğru: '+q.year;}
+  elScoreTop.textContent='Skor: '+score;
+  locked=true;setTimeout(()=>{i++;locked=false;loadQ();},800);
+}
+elA.addEventListener('click',()=>clickYear(parseInt(elA.textContent,10)));
+elB.addEventListener('click',()=>clickYear(parseInt(elB.textContent,10)));
+function end(){elGame.style.display='none';elEnd.style.display='block';elFinal.textContent=`Skor: ${score}/100 — Doğru: ${right}, Yanlış: ${wrong}`;}
+elAgain.addEventListener('click',()=>{deck=shuffle(BANK).slice(0,PICK_COUNT);i=0;score=0;right=0;wrong=0;locked=false;elScoreTop.textContent='Skor: 0';elEnd.style.display='none';elGame.style.display='block';loadQ();});
+loadQ();
+</script>
+</body>
+</html>
